@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "root",
+    "password": "zegois123@",
+    "database": "recipes",
+    "host": "localhost",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": "zegois123@",
+    "database": "recipes",
+    "host": "localhost",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": "zegois123@",
+    "database": "recipes",
+    "host": "localhost",
+    "dialect": "mysql"
+  }
+}
