@@ -1,6 +1,6 @@
 {
   "development": {
-    "username": "root",
+    "username": "recipes",
     "password": "zegois123@",
     "database": "recipes",
     "host": "localhost",
