@@ -1,6 +1,7 @@
-const { DataTypes } = require("sequelize");
+import { DataTypes } from "sequelize";
+import { v4 as uuidv4 } from "uuid";
 
-module.exports = (sequelize) => {
+export default (sequelize) => {
   const Recipe = sequelize.define(
     "Recipe",
     {

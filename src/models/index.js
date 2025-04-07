@@ -1,12 +1,23 @@
-"use strict";
+import fs from "fs";
+import path from "path";
+import { Sequelize, DataTypes } from "sequelize";
+import { fileURLToPath } from "url";
+import dotenv from "dotenv";
 
-const fs = require("fs");
-const path = require("path");
-const Sequelize = require("sequelize");
+import RecipeModel from "./recipes/recipes.js";
+import RecipeImageModel from "./recipesImages/recipesImages.js";
+import RecipeStepModel from "./recipeSteps/recipeSteps.js";
+import UserModel from "./user/user.js";
+import CategoryModel from "./categorys/categorys.js";
+
+dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 const basename = path.basename(__filename);
+
 const db = {};
 
-// ✅ Usa variáveis de ambiente do .env
 const sequelize = new Sequelize(
   process.env.MYSQL_DATABASE,
   process.env.MYSQL_USER,
@@ -15,50 +26,44 @@ const sequelize = new Sequelize(
     host: process.env.MYSQL_HOST,
     port: process.env.MYSQL_PORT || 3306,
     dialect: "mysql",
-    logging: false, // opcional, remove os logs SQL no console
+    logging: false,
   }
 );
 
-// 🔁 Função recursiva para buscar todos os arquivos .js nas subpastas de models
+// Carrega os modelos automaticamente (caso ainda tenha outros em subpastas)
 function loadModels(dir) {
   fs.readdirSync(dir).forEach((file) => {
     const fullPath = path.join(dir, file);
 
     if (fs.statSync(fullPath).isDirectory()) {
-      loadModels(fullPath); // recursivo
+      loadModels(fullPath);
     } else if (
       file !== basename &&
       file.slice(-3) === ".js" &&
       !file.includes(".test.js")
     ) {
-      const model = require(fullPath)(sequelize, Sequelize.DataTypes);
-      db[model.name] = model;
+      import(fullPath).then((module) => {
+        const model = module.default(sequelize, DataTypes);
+        db[model.name] = model;
+      });
     }
   });
 }
 
-loadModels(__dirname); // Carrega modelos de toda a pasta models
+// Se quiser manter carregamento automático: loadModels(__dirname)
 
-Object.keys(db).forEach((modelName) => {
-  if (db[modelName].associate) {
-    db[modelName].associate(db);
-  }
-});
+// Importa os modelos manualmente
+const Recipe = RecipeModel(sequelize, DataTypes);
+const RecipeImage = RecipeImageModel(sequelize, DataTypes);
+const RecipeStep = RecipeStepModel(sequelize, DataTypes);
+const User = UserModel(sequelize, DataTypes);
+const Category = CategoryModel(sequelize, DataTypes);
 
-const Recipe = require("./recipes/recipes")(sequelize, Sequelize.DataTypes);
-const RecipeImage = require("./recipesImages/recipesImages")(
-  sequelize,
-  Sequelize.DataTypes
-);
-const RecipeStep = require("./recipeSteps/recipeSteps")(
-  sequelize,
-  Sequelize.DataTypes
-);
-const User = require("./user/user")(sequelize, Sequelize.DataTypes);
-const Category = require("./categorys/categorys")(
-  sequelize,
-  Sequelize.DataTypes
-);
+db.Recipe = Recipe;
+db.RecipeImage = RecipeImage;
+db.RecipeStep = RecipeStep;
+db.User = User;
+db.Category = Category;
 
 // Relacionamentos
 Recipe.hasMany(RecipeImage, {
@@ -83,7 +88,6 @@ Category.hasMany(Recipe, {
   as: "recipes",
   onDelete: "SET NULL",
 });
-
 Recipe.belongsTo(Category, {
   foreignKey: "categoryId",
   as: "category",
@@ -92,4 +96,4 @@ Recipe.belongsTo(Category, {
 db.sequelize = sequelize;
 db.Sequelize = Sequelize;
 
-module.exports = db;
+export default db;
