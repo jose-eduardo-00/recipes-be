@@ -2,8 +2,8 @@ import { DataTypes } from "sequelize";
 import { v4 as uuidv4 } from "uuid";
 
 export default (sequelize) => {
-  const Category = sequelize.define(
-    "Category",
+  const AuthTokens = sequelize.define(
+    "AuthTokens",
     {
       id: {
         type: DataTypes.UUID,
@@ -14,18 +14,18 @@ export default (sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false,
+      token: {
+        type: DataTypes.TEXT,
+        allowNull: true,
       },
     },
     {
-      tableName: "categorys",
+      tableName: "auth_tokens",
       timestamps: true,
       underscored: true,
       hooks: {},
     }
   );
 
-  return Category;
+  return AuthTokens;
 };

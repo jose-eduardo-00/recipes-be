@@ -9,6 +9,7 @@ import RecipeImageModel from "./recipesImages/recipesImages.js";
 import RecipeStepModel from "./recipeSteps/recipeSteps.js";
 import UserModel from "./user/user.js";
 import CategoryModel from "./categorys/categorys.js";
+import AuthTokensModel from "./auth/auth.js";
 
 dotenv.config();
 
@@ -58,12 +59,14 @@ const RecipeImage = RecipeImageModel(sequelize, DataTypes);
 const RecipeStep = RecipeStepModel(sequelize, DataTypes);
 const User = UserModel(sequelize, DataTypes);
 const Category = CategoryModel(sequelize, DataTypes);
+const AuthTokens = AuthTokensModel(sequelize, DataTypes);
 
 db.Recipe = Recipe;
 db.RecipeImage = RecipeImage;
 db.RecipeStep = RecipeStep;
 db.User = User;
 db.Category = Category;
+db.AuthTokens = AuthTokens;
 
 // Relacionamentos
 Recipe.hasMany(RecipeImage, {
@@ -91,6 +94,28 @@ Category.hasMany(Recipe, {
 Recipe.belongsTo(Category, {
   foreignKey: "categoryId",
   as: "category",
+});
+
+User.hasMany(AuthTokens, {
+  foreignKey: "userId",
+  as: "tokens",
+  onDelete: "CASCADE",
+});
+
+AuthTokens.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
+});
+
+User.hasMany(Category, {
+  foreignKey: "userId",
+  as: "categories",
+  onDelete: "CASCADE",
+});
+
+Category.belongsTo(User, {
+  foreignKey: "userId",
+  as: "user",
 });
 
 db.sequelize = sequelize;
