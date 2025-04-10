@@ -59,3 +59,55 @@ export const login = async (req, res) => {
     });
   }
 };
+
+export const checkToken = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    const authToken = await AuthTokens.findOne({ where: { token } });
+
+    if (!authToken) {
+      return res.status(400).json({
+        message: "Token inválido ou expirado",
+      });
+    }
+
+    res.status(200).json({
+      message: "Token válido.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Erro ao tentar verificar o token.",
+      error: error.message,
+    });
+  }
+};
+
+export const logout = async (req, res) => {
+  try {
+    const { token } = req.body;
+
+    if (!token) {
+      return res.status(401).json({ message: "Token não fornecido." });
+    }
+
+    const authToken = await AuthTokens.findOne({ where: { token } });
+
+    if (!authToken) {
+      return res.status(400).json({
+        message: "Token não encontrado ou ja removido",
+      });
+    }
+
+    await authToken.update({ token: null });
+
+    res.status(200).json({
+      message: "Logout realizado com sucesso.",
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Erro ao tentar realizar o logout.",
+      error: error.message,
+    });
+  }
+};
