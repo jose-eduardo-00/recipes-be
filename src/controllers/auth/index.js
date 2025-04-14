@@ -72,7 +72,33 @@ export const checkToken = async (req, res) => {
       });
     }
 
-    res.status(200).json({
+    let userId;
+
+    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
+      if (err) {
+        return res.status(401).json({
+          message: "Token expirado ou inválido.",
+        });
+      }
+
+      userId = decoded.id;
+    });
+
+    const user = await User.findOne({ where: { id: userId } });
+
+    if (!user) {
+      return res.status(402).json({
+        message: "Usuário não encontrado.",
+      });
+    }
+
+    if (!user.activated) {
+      return res.status(403).json({
+        message: "Usuário não autorizado.",
+      });
+    }
+
+    return res.status(200).json({
       message: "Token válido.",
     });
   } catch (error) {

@@ -73,7 +73,7 @@ export const deleteCategory = async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-      message: "Erro ao tentar buscar as categorias.",
+      message: "Erro ao tentar deletar a categoria.",
       error: error.message,
     });
   }
