@@ -10,6 +10,8 @@ import RecipeStepModel from "./recipeSteps/recipeSteps.js";
 import UserModel from "./user/user.js";
 import CategoryModel from "./categorys/categorys.js";
 import AuthTokensModel from "./auth/auth.js";
+import RecipeCategoryModel from "./recipeCategory/recipeCategorys.js";
+import RecipeIngredientsModel from "./recipeIngredients/recipeIngredients.js";
 
 dotenv.config();
 
@@ -60,6 +62,8 @@ const RecipeStep = RecipeStepModel(sequelize, DataTypes);
 const User = UserModel(sequelize, DataTypes);
 const Category = CategoryModel(sequelize, DataTypes);
 const AuthTokens = AuthTokensModel(sequelize, DataTypes);
+const RecipeCategory = RecipeCategoryModel(sequelize, DataTypes);
+const RecipeIngredients = RecipeIngredientsModel(sequelize, DataTypes);
 
 db.Recipe = Recipe;
 db.RecipeImage = RecipeImage;
@@ -67,6 +71,8 @@ db.RecipeStep = RecipeStep;
 db.User = User;
 db.Category = Category;
 db.AuthTokens = AuthTokens;
+db.RecipeCategory = RecipeCategory;
+db.RecipeIngredients = RecipeIngredients;
 
 // Relacionamentos
 Recipe.hasMany(RecipeImage, {
@@ -86,14 +92,18 @@ RecipeStep.belongsTo(Recipe, { foreignKey: "recipeId" });
 User.hasMany(Recipe, { foreignKey: "userId" });
 Recipe.belongsTo(User, { foreignKey: "userId" });
 
-Category.hasMany(Recipe, {
-  foreignKey: "categoryId",
-  as: "recipes",
-  onDelete: "SET NULL",
+Recipe.belongsToMany(Category, {
+  through: RecipeCategory,
+  foreignKey: "recipeId",
+  otherKey: "categoryId",
+  as: "categories",
 });
-Recipe.belongsTo(Category, {
+
+Category.belongsToMany(Recipe, {
+  through: RecipeCategory,
   foreignKey: "categoryId",
-  as: "category",
+  otherKey: "recipeId",
+  as: "recipes",
 });
 
 User.hasMany(AuthTokens, {
@@ -116,6 +126,16 @@ User.hasMany(Category, {
 Category.belongsTo(User, {
   foreignKey: "userId",
   as: "user",
+});
+
+Recipe.hasMany(RecipeIngredients, {
+  as: "ingredients",
+  foreignKey: "recipeId",
+  onDelete: "CASCADE",
+});
+
+RecipeIngredients.belongsTo(Recipe, {
+  foreignKey: "recipeId",
 });
 
 db.sequelize = sequelize;

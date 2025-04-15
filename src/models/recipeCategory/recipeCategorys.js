@@ -2,8 +2,8 @@ import { DataTypes } from "sequelize";
 import { v4 as uuidv4 } from "uuid";
 
 export default (sequelize) => {
-  const Ingredient = sequelize.define(
-    "Ingredient",
+  const RecipeCategory = sequelize.define(
+    "RecipeCategory",
     {
       id: {
         type: DataTypes.UUID,
@@ -14,22 +14,17 @@ export default (sequelize) => {
         type: DataTypes.UUID,
         allowNull: false,
       },
-      name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-      },
-      quantity: {
-        type: DataTypes.INTEGER,
+      categoryId: {
+        type: DataTypes.UUID,
         allowNull: false,
       },
     },
     {
-      tableName: "ingredients",
+      tableName: "recipe_categories",
       timestamps: true,
       underscored: true,
-      hooks: {},
     }
   );
 
-  return Ingredient;
+  return RecipeCategory;
 };
