@@ -106,3 +106,41 @@ export const deleteUser = async (req, res) => {
     });
   }
 };
+
+export const editUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { firstName, lastName, email, password, pushToken } = req.body;
+
+    const user = await User.findOne({ where: { id } });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Usuário não encontrado.",
+      });
+    }
+
+    const updatedFields = {
+      firstName: firstName ?? user.firstName,
+      lastName: lastName ?? user.lastName,
+      email: email ?? user.email,
+      pushToken: pushToken ?? user.pushToken,
+    };
+
+    if (password) {
+      updatedFields.password = password;
+    }
+
+    const newUser = await user.update(updatedFields);
+
+    res.status(200).json({
+      message: "Usuário atualizado com sucesso",
+      user: newUser,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Erro ao tentar atualizar o usuário.",
+      error: error.message,
+    });
+  }
+};
