@@ -72,19 +72,16 @@ export const checkToken = async (req, res) => {
       });
     }
 
-    let userId;
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
+    } catch (err) {
+      return res.status(401).json({
+        message: "Token expirado ou inválido.",
+      });
+    }
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, decoded) => {
-      if (err) {
-        return res.status(401).json({
-          message: "Token expirado ou inválido.",
-        });
-      }
-
-      userId = decoded.id;
-    });
-
-    const user = await User.findOne({ where: { id: userId } });
+    const user = await User.findOne({ where: { id: decoded.id } });
 
     if (!user) {
       return res.status(402).json({
