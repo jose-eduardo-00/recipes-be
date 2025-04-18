@@ -1,20 +1,21 @@
 import Sequelize from "../../config/database.js";
 import db from "../../models/index.js";
 
-const { Recipe, RecipeCategory, RecipeIngredients, RecipeStep } = db;
+const { Recipe, RecipeCategory, RecipeIngredients, RecipeStep, RecipeImage } =
+  db;
 
 export const createRecipe = async (req, res) => {
   const transaction = await Sequelize.transaction();
 
   try {
-    const {
-      name,
-      desciption,
-      userId,
-      categorys,
-      ingredients,
-      preparationMethod,
-    } = req.body;
+    const { name, desciption, userId } = req.body;
+
+    // ⚠️ Parse dos campos que vêm como JSON (enviados via FormData no frontend)
+    const categorys = JSON.parse(req.body.categorys || "[]");
+    const ingredients = JSON.parse(req.body.ingredients || "[]");
+    const preparationMethod = JSON.parse(req.body.preparationMethod || "[]");
+
+    const files = req.files;
 
     const newRecipe = await Recipe.create(
       {
@@ -25,6 +26,7 @@ export const createRecipe = async (req, res) => {
       { transaction }
     );
 
+    // Categorias
     if (Array.isArray(categorys) && categorys.length > 0) {
       const categoryEntries = categorys.map((categoryId) => ({
         recipeId: newRecipe.id,
@@ -34,7 +36,7 @@ export const createRecipe = async (req, res) => {
       await RecipeCategory.bulkCreate(categoryEntries, { transaction });
     }
 
-    // Cria os ingredientes (se houver)
+    // Ingredientes
     if (Array.isArray(ingredients) && ingredients.length > 0) {
       const ingredientEntries = ingredients.map((ingredient) => ({
         recipeId: newRecipe.id,
@@ -45,7 +47,7 @@ export const createRecipe = async (req, res) => {
       await RecipeIngredients.bulkCreate(ingredientEntries, { transaction });
     }
 
-    // Cria os métodos de preparo (se houver)
+    // Método de preparo
     if (Array.isArray(preparationMethod) && preparationMethod.length > 0) {
       const methodEntries = preparationMethod.map((step) => ({
         recipeId: newRecipe.id,
@@ -54,6 +56,17 @@ export const createRecipe = async (req, res) => {
       }));
 
       await RecipeStep.bulkCreate(methodEntries, { transaction });
+    }
+
+    // Imagens
+    if (files && files.length > 0) {
+      const imageEntries = files.map((file, index) => ({
+        recipeId: newRecipe.id,
+        imageUrl: `/public/recipes/${file.filename}`, // ou `file.path` dependendo do seu setup
+        order: index + 1,
+      }));
+
+      await RecipeImage.bulkCreate(imageEntries, { transaction });
     }
 
     await transaction.commit();
