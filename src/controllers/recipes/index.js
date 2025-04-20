@@ -1,8 +1,14 @@
 import Sequelize from "../../config/database.js";
 import db from "../../models/index.js";
 
-const { Recipe, RecipeCategory, RecipeIngredients, RecipeStep, RecipeImage } =
-  db;
+const {
+  Recipe,
+  RecipeCategory,
+  RecipeIngredients,
+  RecipeStep,
+  RecipeImage,
+  Category,
+} = db;
 
 export const createRecipe = async (req, res) => {
   const transaction = await Sequelize.transaction();
@@ -80,6 +86,41 @@ export const createRecipe = async (req, res) => {
 
     res.status(500).json({
       message: "Erro ao tentar criar a receita",
+      error: error.message,
+    });
+  }
+};
+
+export const recipesById = async (req, res) => {
+  try {
+    const recipes = await Recipe.findAll({
+      include: [
+        {
+          model: RecipeImage,
+          as: "images",
+        },
+        {
+          model: RecipeStep,
+          as: "steps",
+        },
+        {
+          model: RecipeIngredients,
+          as: "ingredients",
+        },
+        {
+          model: Category,
+          as: "categories",
+          through: { attributes: [] }, // remove os dados da tabela intermediária
+        },
+      ],
+    });
+
+    res.status(200).json({
+      recipes,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Erro ao tentar buscar as receitas.",
       error: error.message,
     });
   }
