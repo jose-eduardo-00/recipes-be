@@ -1,6 +1,7 @@
 import db from "../../models/index.js";
+import jwt from "jsonwebtoken";
 
-const { User } = db;
+const { User, AuthTokens } = db;
 
 export const createUser = async (req, res) => {
   try {
@@ -112,6 +113,8 @@ export const editUser = async (req, res) => {
     const { id } = req.params;
     const { firstName, lastName, email, password, pushToken } = req.body;
 
+    const file = req.file;
+
     const user = await User.findOne({ where: { id } });
 
     if (!user) {
@@ -125,6 +128,8 @@ export const editUser = async (req, res) => {
       lastName: lastName ?? user.lastName,
       email: email ?? user.email,
       pushToken: pushToken ?? user.pushToken,
+      avatar:
+        file != undefined ? `/public/users/${file.filename}` : user.avatar,
     };
 
     if (password) {
@@ -133,9 +138,27 @@ export const editUser = async (req, res) => {
 
     const newUser = await user.update(updatedFields);
 
+    const token = jwt.sign(newUser.toJSON(), process.env.JWT_SECRET, {
+      expiresIn: "1d",
+    });
+
+    const existingToken = await AuthTokens.findOne({
+      where: { userId: newUser.id },
+    });
+
+    if (existingToken) {
+      await AuthTokens.update({ token }, { where: { userId: newUser.id } });
+    } else {
+      await AuthTokens.create({
+        userId: newUser.id,
+        token,
+      });
+    }
+
     res.status(200).json({
       message: "Usuário atualizado com sucesso",
       user: newUser,
+      token: token,
     });
   } catch (error) {
     res.status(500).json({

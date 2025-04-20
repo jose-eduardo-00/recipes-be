@@ -1,6 +1,6 @@
 import express from "express";
 import { createRecipe } from "../../controllers/recipes/index.js";
-import upload from "../../middlewares/uploaderImage.js";
+import upload from "../../middlewares/uploaderImageRecipes.js";
 
 const router = express.Router();
 
