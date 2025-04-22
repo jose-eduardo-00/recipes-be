@@ -1,3 +1,4 @@
+import { where } from "sequelize";
 import Sequelize from "../../config/database.js";
 import db from "../../models/index.js";
 
@@ -93,7 +94,10 @@ export const createRecipe = async (req, res) => {
 
 export const recipesById = async (req, res) => {
   try {
+    const { id } = req.params;
+
     const recipes = await Recipe.findAll({
+      where: { userId: id },
       include: [
         {
           model: RecipeImage,
