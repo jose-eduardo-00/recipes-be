@@ -1,4 +1,4 @@
-import { where } from "sequelize";
+import { Op } from "sequelize";
 import Sequelize from "../../config/database.js";
 import db from "../../models/index.js";
 
@@ -125,6 +125,113 @@ export const recipesById = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       message: "Erro ao tentar buscar as receitas.",
+      error: error.message,
+    });
+  }
+};
+
+export const recipeById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const recipes = await Recipe.findByPk(id, {
+      include: [
+        {
+          model: RecipeImage,
+          as: "images",
+        },
+        {
+          model: RecipeStep,
+          as: "steps",
+        },
+        {
+          model: RecipeIngredients,
+          as: "ingredients",
+        },
+        {
+          model: Category,
+          as: "categories",
+          through: { attributes: [] }, // remove os dados da tabela intermediária
+        },
+      ],
+    });
+
+    res.status(200).json({
+      recipes,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Erro ao tentar buscar as receitas.",
+      error: error.message,
+    });
+  }
+};
+
+export const recommendedRecipes = async (req, res) => {
+  try {
+    const { id } = req.params; // id do usuário
+    const { userId, recipeId } = req.body;
+
+    // 1. Busca a receita para pegar as categorias dela
+    const recipe = await Recipe.findByPk(recipeId, {
+      include: [
+        {
+          model: Category,
+          as: "categories",
+          through: { attributes: [] },
+        },
+      ],
+    });
+
+    if (!recipe) {
+      return res.status(404).json({ message: "Receita base não encontrada." });
+    }
+
+    const categoryIds = recipe.categories.map((category) => category.id);
+
+    // 2. Monta o where dinamicamente
+    const whereClause = {
+      id: { [Op.ne]: recipeId },
+    };
+
+    if (userId === id) {
+      whereClause.userId = { [Op.ne]: id };
+    }
+
+    // 3. Busca receitas recomendadas com pelo menos uma categoria em comum
+    const recipes = await Recipe.findAll({
+      where: whereClause,
+      include: [
+        {
+          model: RecipeImage,
+          as: "images",
+        },
+        {
+          model: RecipeStep,
+          as: "steps",
+        },
+        {
+          model: RecipeIngredients,
+          as: "ingredients",
+        },
+        {
+          model: Category,
+          as: "categories",
+          through: { attributes: [] },
+          where: {
+            id: {
+              [Op.in]: categoryIds,
+            },
+          },
+          required: true,
+        },
+      ],
+    });
+
+    res.status(200).json({ recipes });
+  } catch (error) {
+    res.status(500).json({
+      message: "Erro ao tentar buscar as receitas recomendadas.",
       error: error.message,
     });
   }
