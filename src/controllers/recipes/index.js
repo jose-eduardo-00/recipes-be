@@ -360,3 +360,39 @@ export const updateRecipe = async (req, res) => {
     });
   }
 };
+
+export const deleteRecipe = async (req, res) => {
+  const transaction = await Sequelize.transaction();
+
+  try {
+    const recipeId = req.params.id;
+
+    const images = await RecipeImage.findAll({ where: { recipeId } });
+    for (const img of images) {
+      const filePath = path.join(__dirname, "../../../", img.imageUrl);
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`Imagem removida do disco: ${filePath}`);
+      }
+    }
+
+    await RecipeCategory.destroy({ where: { recipeId }, transaction });
+    await RecipeIngredients.destroy({ where: { recipeId }, transaction });
+    await RecipeStep.destroy({ where: { recipeId }, transaction });
+    await RecipeImage.destroy({ where: { recipeId }, transaction });
+
+    await Recipe.destroy({ where: { id: recipeId }, transaction });
+
+    await transaction.commit();
+
+    res.status(200).json({
+      message: "Receita deletada com sucesso.",
+    });
+  } catch (error) {
+    await transaction.rollback();
+    res.status(500).json({
+      message: "Erro ao deletar a receita",
+      error: error.message,
+    });
+  }
+};

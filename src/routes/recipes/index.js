@@ -1,6 +1,7 @@
 import express from "express";
 import {
   createRecipe,
+  deleteRecipe,
   recipeById,
   recipesById,
   recommendedRecipes,
@@ -15,5 +16,6 @@ router.get("/:id", recipesById);
 router.get("/recipe/:id", recipeById);
 router.post("/recommended-recipes/:id", recommendedRecipes);
 router.put("/edit/:id", upload.array("images", 3), updateRecipe);
+router.delete("/delete/:id", deleteRecipe);
 
 export default router;
