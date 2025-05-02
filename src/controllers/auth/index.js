@@ -134,3 +134,54 @@ export const logout = async (req, res) => {
     });
   }
 };
+
+export const sendEmail = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    const user = await User.findOne({ where: { email } });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Email nao encontrado na base de dados.",
+      });
+    }
+
+    res.status(200).json({
+      message: "Email encontrado com sucesso.",
+      user: user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Erro ao tentar encontrar o email.",
+      error: error.message,
+    });
+  }
+};
+
+export const changePass = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    const user = await User.findOne({ where: { id } });
+
+    if (!user) {
+      return res.status(400).json({
+        message: "Usuário nao encontrado na base de dados.",
+      });
+    }
+
+    await user.update({ password: password });
+
+    res.status(200).json({
+      message: "Senha atualizada com sucesso.",
+      user: user,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: "Erro ao tentar encontrar o usuário.",
+      error: error.message,
+    });
+  }
+};
